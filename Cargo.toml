@@ -11,3 +11,6 @@ serde_codegen = "0.7.10"
 hyper = "0.9.8"
 serde = "0.7.10"
 serde_json = "0.7.1"
+
+[features]
+unstable = []
