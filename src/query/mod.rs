@@ -79,9 +79,9 @@ pub fn imdb_id<S: Into<String>>(title: S) -> FindQuery {
 ///
 /// let show = omdb::title("Silicon Valley")
 /// 	.year(2014)
-/// 		.kind(Kind::Series)
-/// 		.get()
-/// 		.unwrap();
+/// 	.kind(Kind::Series)
+/// 	.get()
+/// 	.unwrap();
 ///
 /// assert!(show.imdb_id == "tt2575988");
 /// ```
