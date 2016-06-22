@@ -1,0 +1,13 @@
+[package]
+name = "omdb"
+version = "0.1.0"
+authors = ["Brandon Aldrich <brandon@aldr.io>"]
+build = "build.rs"
+
+[build-dependencies]
+serde_codegen = "0.7.10"
+
+[dependencies]
+hyper = "0.9.8"
+serde = "0.7.10"
+serde_json = "0.7.1"
