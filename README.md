@@ -27,7 +27,7 @@ Search movies:
 use omdb::Kind;
 
 let movies = omdb::search("batman")
-	.kind(Kind::Movie) // Optionalally search only for movies
+	.kind(Kind::Movie) // Optionally filter results to movies only
 	.get().unwrap();
 
 assert!(movies.total_results > 0);
