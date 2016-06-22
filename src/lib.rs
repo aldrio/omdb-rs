@@ -1,4 +1,4 @@
-//! OMDb Api for Rust
+//! OMDb API for Rust
 //! 
 //! [Github Repo](https://github.com/aldrio/omdb-rs)
 extern crate hyper;
