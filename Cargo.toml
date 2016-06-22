@@ -2,6 +2,7 @@
 name = "omdb"
 version = "0.1.0"
 authors = ["Brandon Aldrich <brandon@aldr.io>"]
+description = "OMDb API for Rust"
 documentation = "https://aldrio.github.io/omdb-rs/omdb/"
 homepage = "https://github.com/aldrio/omdb-rs"
 repository = "https://github.com/aldrio/omdb-rs"
