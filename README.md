@@ -35,7 +35,7 @@ assert!(movies.total_results > 0);
 ```
 
 ## Usage
-Add the crates.io `omdb` dependencie to your Cargo.toml file.
+Add the crates.io `omdb` dependency to your Cargo.toml file.
 ```toml
 
 [dependencies]
