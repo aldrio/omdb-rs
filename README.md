@@ -33,3 +33,13 @@ let movies = omdb::search("batman")
 
 assert!(movies.total_results > 0);
 ```
+
+## Usage
+Add the crates.io `omdb` dependencie to your Cargo.toml file.
+```toml
+
+[dependencies]
+omdb = "*"
+
+```
+Include `extern crate: omdb;` in your crate root.
