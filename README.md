@@ -1,5 +1,6 @@
 # [OMDb API](https://www.omdbapi.com) for Rust
 [![Build Status](https://travis-ci.org/aldrio/omdb-rs.svg?branch=master)](https://travis-ci.org/aldrio/omdb-rs)
+[![Crates.io](https://img.shields.io/crates/v/omdb.svg?maxAge=2592000?style=plastic)](https://crates.io/crates/omdb)
 
 **[Documentation](https://aldrio.github.io/omdb-rs/omdb/)**
 
