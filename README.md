@@ -4,9 +4,11 @@
 
 **[Documentation](https://aldrio.github.io/omdb-rs/omdb/)**
 
+Search movies, tv shows, and games using The Open Movie Database.
+
 ## Examples
 
-Find movie by title:
+Find by title:
 ```rust
 let show = omdb::title("The Wizard of Oz")
 	.year(1939)
@@ -15,7 +17,7 @@ let show = omdb::title("The Wizard of Oz")
 assert!(show.imdb_id == "tt0032138");
 ```
 
-Find movie by IMDb ID:
+Find by IMDb ID:
 ```rust
 let movie = omdb::imdb_id("tt0111161")
     .get().unwrap();
