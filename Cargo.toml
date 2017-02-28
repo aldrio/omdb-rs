@@ -15,5 +15,7 @@ serde_codegen = "0.9"
 
 [dependencies]
 hyper = "0.10"
+hyper-native-tls = "0.2"
 serde = "0.9"
 serde_json = "0.9"
+lazy_static = "0.2"

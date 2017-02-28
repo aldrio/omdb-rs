@@ -2,8 +2,11 @@
 //! 
 //! [Github Repo](https://github.com/aldrio/omdb-rs)
 extern crate hyper;
+extern crate hyper_native_tls;
 extern crate serde;
 extern crate serde_json;
+#[macro_use]
+extern crate lazy_static;
 
 mod error;
 pub use error::Error;
