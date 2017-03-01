@@ -1,6 +1,7 @@
 use hyper::Url;
-use hyper::client::{Request, Response};
-use hyper::method::Method;
+use hyper::client::{Response, Client};
+use hyper::net::HttpsConnector;
+use hyper_native_tls::NativeTlsClient;
 use {Movie, Kind, Plot, Error, SearchResults};
 use hyper::status::StatusCode;
 use serde_json;
@@ -8,6 +9,10 @@ use std::borrow::Borrow;
 
 mod model;
 use self::model::{FindResponse, SearchResponse};
+
+lazy_static! {
+    static ref CLIENT: Client = Client::with_connector(HttpsConnector::new(NativeTlsClient::new().unwrap()));
+}
 
 /// A function to create and send a request to OMDb.
 fn get_request<I, K, V>(params: I) -> Result<Response, Error>
@@ -31,10 +36,7 @@ fn get_request<I, K, V>(params: I) -> Result<Response, Error>
         .extend_pairs(params);
 
     // Create and send the get request
-    let req = try!(Request::new(Method::Get, url));
-    let req = try!(req.start());
-
-    let res = try!(req.send());
+    let res = CLIENT.get(url).send()?;
 
     // Return status error if status isn't Ok
     if res.status != StatusCode::Ok {
