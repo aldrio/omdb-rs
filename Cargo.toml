@@ -1,6 +1,6 @@
 [package]
 name = "omdb"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["Brandon Aldrich <brandon@aldr.io>"]
 description = "OMDb API for Rust"
 documentation = "https://docs.rs/crate/omdb"
@@ -8,14 +8,11 @@ homepage = "https://github.com/aldrio/omdb-rs"
 repository = "https://github.com/aldrio/omdb-rs"
 readme = "README.md"
 license = "MIT"
-build = "build.rs"
-
-[build-dependencies]
-serde_codegen = "0.9"
 
 [dependencies]
 hyper = "0.10"
 hyper-native-tls = "0.2"
 serde = "0.9"
 serde_json = "0.9"
+serde_derive = "0.9"
 lazy_static = "0.2"
