@@ -11,6 +11,7 @@ Find by title:
 
 ```rust
 let show = omdb::title("The Wizard of Oz")
+	.apikey(APIKEY)
 	.year(1939)
 	.get().unwrap();
 
@@ -21,6 +22,7 @@ Find by IMDb ID:
 
 ```rust
 let movie = omdb::imdb_id("tt0111161")
+	.apikey(APIKEY)
     .get().unwrap();
 
 assert!(movie.title == "The Shawshank Redemption");
@@ -32,6 +34,7 @@ Search movies:
 use omdb::Kind;
 
 let movies = omdb::search("batman")
+	.apikey(APIKEY)
 	.kind(Kind::Movie) // Optionally filter results to movies only
 	.get().unwrap();
 
