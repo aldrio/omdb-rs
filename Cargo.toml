@@ -1,6 +1,6 @@
 [package]
 name = "omdb"
-version = "0.1.2"
+version = "0.2.1"
 authors = ["Brandon Aldrich <brandon@aldr.io>"]
 description = "OMDb API for Rust"
 documentation = "https://docs.rs/crate/omdb"
