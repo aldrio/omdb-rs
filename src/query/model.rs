@@ -94,14 +94,14 @@ pub struct SearchResponse {
 	#[serde(rename="Search")]
 	pub search: Option<Vec<SearchResponseMovie>>,
 	#[serde(rename="totalResults")]
-	pub total_results: Option<usize>,
+	pub total_results: Option<String>,
 }
 
 impl From<SearchResponse> for SearchResults {
 	fn from(sr: SearchResponse) -> SearchResults {
 		SearchResults {
 			results: sr.search.unwrap_or_default().into_iter().map(|srm| srm.into()).collect(),
-			total_results: sr.total_results.unwrap_or_default(),
+			total_results: sr.total_results.map(|s| s.parse::<usize>().unwrap_or_default()).unwrap_or_default(),
 		}
 	}
 }
