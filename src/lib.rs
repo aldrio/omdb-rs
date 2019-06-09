@@ -1,10 +1,14 @@
 //! OMDb API for Rust
 //! 
 //! [Github Repo](https://github.com/aldrio/omdb-rs)
+extern crate hyper;
+extern crate hyper_native_tls;
 extern crate serde;
+extern crate serde_json;
 #[macro_use]
 extern crate serde_derive;
-extern crate reqwest;
+#[macro_use]
+extern crate lazy_static;
 
 mod error;
 pub use error::Error;
@@ -109,14 +113,13 @@ impl From<Plot> for &'static str {
 
 #[cfg(test)]
 mod tests {
-    use std::env;
+
     use Kind;
 
     #[test]
     fn imdb_id() {
-        let apikey = env::var("OMDB_APIKEY").expect("OMDB_APIKEY must be set");
+
         let movie = super::imdb_id("tt0032138")
-            .apikey(apikey)
             .year(1939)
             .get()
             .unwrap();
@@ -126,9 +129,8 @@ mod tests {
 
     #[test]
     fn title() {
-        let apikey = env::var("OMDB_APIKEY").expect("OMDB_APIKEY must be set");
+
         let show = super::title("silicon valley")
-            .apikey(apikey)
             .year(2014)
             .kind(Kind::Series)
             .get()
@@ -139,10 +141,8 @@ mod tests {
 
     #[test]
     fn search() {
-        let apikey = env::var("OMDB_APIKEY").expect("OMDB_APIKEY must be set");
-        let search = super::search("Batman")
-            .apikey(apikey)
-            .get().unwrap();
+
+        let search = super::search("Batman").get().unwrap();
 
         assert!(search.total_results > 0);
     }

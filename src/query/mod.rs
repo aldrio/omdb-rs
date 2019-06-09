@@ -1,39 +1,49 @@
-
-use reqwest;
-
+use hyper::Url;
+use hyper::client::{Response, Client};
+use hyper::net::HttpsConnector;
+use hyper_native_tls::NativeTlsClient;
 use {Movie, Kind, Plot, Error, SearchResults};
-use serde::Serialize;
+use hyper::status::StatusCode;
+use serde_json;
 use std::borrow::Borrow;
 
 mod model;
 use self::model::{FindResponse, SearchResponse};
 
+lazy_static! {
+    static ref CLIENT: Client = Client::with_connector(HttpsConnector::new(NativeTlsClient::new().unwrap()));
+}
+
 /// A function to create and send a request to OMDb.
-fn get_request<I, K, V>(params: I) -> Result<reqwest::Response, Error>
+fn get_request<I, K, V>(params: I) -> Result<Response, Error>
     where I: IntoIterator,
-          I::Item: Borrow<(K, V)> + Serialize,
-          K: AsRef<str> + Serialize,
-          V: AsRef<str> + Serialize
+          I::Item: Borrow<(K, V)>,
+          K: AsRef<str>,
+          V: AsRef<str>
 {
     const API_ENDPOINT: &'static str = "https://omdbapi.com";
     const API_VERSION: &'static str = "1";
 
-    let params = params.into_iter().collect::<Vec<_>>();
+    // Make the url
+    let mut url = match Url::parse(API_ENDPOINT) {
+        Ok(url) => url,
+        Err(_) => return Err(Error::Other("url parsing error")),
+    };
 
-    let response = reqwest::Client::new()
-                    .get(API_ENDPOINT)
-                    .query(&[("v", API_VERSION)])
-                    .query(&[("r", "json")])
-                    .query(&params)
-                    .send()?;
+    url.query_pairs_mut()
+        .append_pair("v", API_VERSION)
+        .append_pair("r", "json")
+        .extend_pairs(params);
 
-    let status = response.status();
+    // Create and send the get request
+    let res = CLIENT.get(url).send()?;
 
-    if !status.is_success() {
-        return Err(Error::Status(status));
+    // Return status error if status isn't Ok
+    if res.status != StatusCode::Ok {
+        return Err(Error::Status(res.status));
     }
 
-    Ok(response)
+    Ok(res)
 }
 
 /// Starts a new `FindQuery` with an imdb_id.
@@ -46,9 +56,7 @@ fn get_request<I, K, V>(params: I) -> Result<reqwest::Response, Error>
 /// Find a movie using it's IMDb id:
 ///
 /// ```
-/// let apikey = std::env::var("OMDB_APIKEY").expect("OMDB_APIKEY must be set");
 /// let movie = omdb::imdb_id("tt0032138")
-///     .apikey(apikey)
 /// 	.year(1939)
 /// 	.get()
 /// 	.unwrap();
@@ -70,10 +78,8 @@ pub fn imdb_id<S: Into<String>>(title: S) -> FindQuery {
 ///
 /// ```
 /// use omdb::Kind;
-/// let apikey = std::env::var("OMDB_APIKEY").expect("OMDB_APIKEY must be set");
 ///
 /// let show = omdb::title("Silicon Valley")
-///     .apikey(apikey)
 /// 	.year(2014)
 /// 	.kind(Kind::Series)
 /// 	.get()
@@ -96,8 +102,7 @@ pub fn title<S: Into<String>>(title: S) -> FindQuery {
 /// Search for movies:
 ///
 /// ```
-/// let apikey = std::env::var("OMDB_APIKEY").expect("OMDB_APIKEY must be set");
-/// let movies = omdb::search("batman").apikey(apikey).get().unwrap();
+/// let movies = omdb::search("batman").get().unwrap();
 ///
 /// assert!(movies.total_results > 0);
 /// ```
@@ -113,8 +118,6 @@ pub struct FindQuery {
     imdb_id: Option<String>,
     title: Option<String>,
 
-    apikey: Option<String>,
-
     // Optional
     kind: Option<Kind>,
     year: Option<String>,
@@ -126,7 +129,6 @@ impl Default for FindQuery {
         FindQuery {
             imdb_id: None,
             title: None,
-            apikey: None,
             kind: None,
             year: None,
             plot: None,
@@ -144,11 +146,6 @@ impl FindQuery {
     /// Specify the year.
     pub fn year<S: ToString>(&mut self, year: S) -> &mut FindQuery {
         self.year = Some(year.to_string());
-        self
-    }
-
-    pub fn apikey<S: ToString>(&mut self, apikey: S) -> &mut FindQuery {
-        self.apikey = Some(apikey.to_string());
         self
     }
 
@@ -170,10 +167,6 @@ impl FindQuery {
             params.push(("t", t.clone()));
         }
 
-        if let Some(k) = self.apikey.as_ref() {
-            params.push(("apikey", k.clone()));
-        }
-
         if let Some(kind) = self.kind.as_ref() {
             let k: &str = (*kind).into();
             params.push(("type", String::from(k)));
@@ -189,15 +182,18 @@ impl FindQuery {
         }
 
         // Send our request
-        let response: FindResponse = get_request(params)?.json()?;
+        let response = try!(get_request(params));
+
+        // Deserialize the response into our catch-all FindResponse struct
+        let data: FindResponse = try!(serde_json::from_reader(response));
 
         // Check if the Api's Response string equals true
-        if response.response.to_lowercase() != "true" {
+        if data.response.to_lowercase() != "true" {
             // Return with the Api's Error field or "undefined" if empty
-            return Err(Error::Api(response.error.unwrap_or("undefined".to_owned())));
+            return Err(Error::Api(data.error.unwrap_or("undefined".to_owned())));
         }
 
-        Ok(response.into())
+        Ok(data.into())
     }
 }
 
@@ -206,7 +202,6 @@ impl FindQuery {
 #[derive(Debug)]
 pub struct SearchQuery {
     search: String,
-    apikey: Option<String>,
 
     // Optional
     kind: Option<Kind>,
@@ -218,7 +213,6 @@ impl Default for SearchQuery {
     fn default() -> SearchQuery {
         SearchQuery {
             search: String::new(),
-            apikey: None,
             kind: None,
             year: None,
             page: None,
@@ -227,13 +221,6 @@ impl Default for SearchQuery {
 }
 
 impl SearchQuery {
-
-    pub fn apikey<S: ToString>(&mut self, apikey: S) -> &mut SearchQuery {
-        self.apikey = Some(apikey.to_string());
-        self
-    }
-
-
     /// Specify the kind of media.
     pub fn kind(&mut self, kind: Kind) -> &mut SearchQuery {
         self.kind = Some(kind);
@@ -261,10 +248,6 @@ impl SearchQuery {
 
         params.push(("s", self.search.clone()));
 
-        if let Some(k) = self.apikey.as_ref() {
-            params.push(("apikey", k.clone()));
-        }
-
         if let Some(kind) = self.kind.as_ref() {
             let k: &str = (*kind).into();
             params.push(("type", String::from(k)));
@@ -279,14 +262,17 @@ impl SearchQuery {
         }
 
         // Send our request
-        let response: SearchResponse = get_request(params)?.json()?;
+        let response = try!(get_request(params));
+
+        // Deserialize the response into our catch-all FindResponse struct
+        let data: SearchResponse = try!(serde_json::from_reader(response));
 
         // Check if the Api's Response string equals true
-        if response.response.to_lowercase() != "true" {
+        if data.response.to_lowercase() != "true" {
             // Return with the Api's Error field or "undefined" if empty
-            return Err(Error::Api(response.error.unwrap_or("undefined".to_owned())));
+            return Err(Error::Api(data.error.unwrap_or("undefined".to_owned())));
         }
 
-        Ok(response.into())
+        Ok(data.into())
     }
 }
