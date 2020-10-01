@@ -15,7 +15,7 @@ pub use query::title;
 pub use query::search;
 
 /// A movie, series, episode, or game from OMDb.
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Movie {
     pub title: String,
     pub year: String,
@@ -60,7 +60,7 @@ pub struct SearchResultsMovie {
 /// Distinguishes between the different types of media available.
 ///
 /// Note that `Kind` is the same thing as OMDb's `Type`.
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub enum Kind {
     Movie,
     Series,
