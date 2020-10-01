@@ -51,9 +51,9 @@ where
 /// let apikey = std::env::var("OMDB_APIKEY").expect("OMDB_APIKEY must be set");
 /// let movie = omdb::imdb_id("tt0032138")
 ///     .apikey(apikey)
-/// 	.year(1939)
-/// 	.get()
-/// 	.unwrap();
+///     .year(1939)
+///     .get()
+///     .unwrap();
 ///
 /// assert!(movie.title == "The Wizard of Oz");
 /// ```
@@ -79,10 +79,10 @@ pub fn imdb_id<S: Into<String>>(title: S) -> FindQuery {
 ///
 /// let show = omdb::title("Silicon Valley")
 ///     .apikey(apikey)
-/// 	.year(2014)
-/// 	.kind(Kind::Series)
-/// 	.get()
-/// 	.unwrap();
+///     .year(2014)
+///     .kind(Kind::Series)
+///     .get()
+///     .unwrap();
 ///
 /// assert!(show.imdb_id == "tt2575988");
 /// ```
