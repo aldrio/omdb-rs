@@ -56,4 +56,3 @@ Add the crates.io `omdb` dependency to your Cargo.toml file.
 omdb = "*"
 
 ```
-Include `extern crate: omdb;` in your crate root.

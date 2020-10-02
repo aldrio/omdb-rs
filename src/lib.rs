@@ -1,10 +1,7 @@
 //! OMDb API for Rust
 //!
 //! [Github Repo](https://github.com/aldrio/omdb-rs)
-extern crate serde;
-#[macro_use]
-extern crate serde_derive;
-extern crate reqwest;
+use serde::{Deserialize, Serialize};
 
 mod error;
 pub use error::Error;

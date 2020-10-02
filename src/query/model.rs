@@ -1,6 +1,5 @@
-
 use crate::{Kind, Movie, SearchResults, SearchResultsMovie};
-
+use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
 pub struct FindResponse {
