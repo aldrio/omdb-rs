@@ -16,19 +16,7 @@ pub enum Error {
 }
 
 impl StdError for Error {
-
-    // TODO: Deprecated.
-    #[allow(deprecated)]
-    fn description(&self) -> &str {
-        match *self {
-            Error::Http(ref err) => err.description(),
-            Error::Status(status) => status.canonical_reason().unwrap_or("Unknown status"),
-            Error::Api(ref desc) => desc.as_ref(),
-            Error::Other(desc) => desc,
-        }
-    }
-
-    fn cause(&self) -> Option<&dyn StdError> {
+    fn source(&self) -> Option<&(dyn StdError + 'static)> {
         match *self {
             Error::Http(ref err) => Some(err),
             _ => None,
@@ -44,9 +32,11 @@ impl From<reqwest::Error> for Error {
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
+        match self {
             Error::Http(ref err) => err.fmt(f),
-            _ => f.write_str(&self.to_string()),
+            Error::Status(status) => status.canonical_reason().unwrap_or("Unknown status").fmt(f),
+            Error::Api(ref desc) => desc.fmt(f),
+            Error::Other(desc) => desc.fmt(f),
         }
     }
 }
