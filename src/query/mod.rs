@@ -1,31 +1,31 @@
-
-use reqwest;
-
-use {Movie, Kind, Plot, Error, SearchResults};
 use serde::Serialize;
 use std::borrow::Borrow;
 
 mod model;
 use self::model::{FindResponse, SearchResponse};
 
+use crate::{Error, Kind, Movie, Plot, SearchResults};
+
 /// A function to create and send a request to OMDb.
-fn get_request<I, K, V>(params: I) -> Result<reqwest::Response, Error>
-    where I: IntoIterator,
-          I::Item: Borrow<(K, V)> + Serialize,
-          K: AsRef<str> + Serialize,
-          V: AsRef<str> + Serialize
+async fn get_request<I, K, V>(params: I) -> Result<reqwest::Response, Error>
+where
+    I: IntoIterator,
+    I::Item: Borrow<(K, V)> + Serialize,
+    K: AsRef<str> + Serialize,
+    V: AsRef<str> + Serialize,
 {
-    const API_ENDPOINT: &'static str = "https://omdbapi.com";
-    const API_VERSION: &'static str = "1";
+    const API_ENDPOINT: &str = "https://omdbapi.com";
+    const API_VERSION: &str = "1";
 
     let params = params.into_iter().collect::<Vec<_>>();
 
     let response = reqwest::Client::new()
-                    .get(API_ENDPOINT)
-                    .query(&[("v", API_VERSION)])
-                    .query(&[("r", "json")])
-                    .query(&params)
-                    .send()?;
+        .get(API_ENDPOINT)
+        .query(&[("v", API_VERSION)])
+        .query(&[("r", "json")])
+        .query(&params)
+        .send()
+        .await?;
 
     let status = response.status();
 
@@ -46,17 +46,23 @@ fn get_request<I, K, V>(params: I) -> Result<reqwest::Response, Error>
 /// Find a movie using it's IMDb id:
 ///
 /// ```
-/// let apikey = std::env::var("OMDB_APIKEY").expect("OMDB_APIKEY must be set");
-/// let movie = omdb::imdb_id("tt0032138")
-///     .apikey(apikey)
-/// 	.year(1939)
-/// 	.get()
-/// 	.unwrap();
-///
-/// assert!(movie.title == "The Wizard of Oz");
+/// # async fn test() {
+///     let apikey = std::env::var("OMDB_APIKEY").expect("OMDB_APIKEY must be set");
+///     let movie = omdb::imdb_id("tt0032138")
+///         .apikey(apikey)
+///         .year(1939)
+///         .get()
+///         .await
+///         .unwrap();
+///    
+///     assert!(movie.title == "The Wizard of Oz");
+/// # }
 /// ```
 pub fn imdb_id<S: Into<String>>(title: S) -> FindQuery {
-    FindQuery { imdb_id: Some(title.into()), ..Default::default() }
+    FindQuery {
+        imdb_id: Some(title.into()),
+        ..Default::default()
+    }
 }
 
 /// Starts a new `FindQuery` with a title.
@@ -69,20 +75,26 @@ pub fn imdb_id<S: Into<String>>(title: S) -> FindQuery {
 /// Find a series using it's title:
 ///
 /// ```
-/// use omdb::Kind;
-/// let apikey = std::env::var("OMDB_APIKEY").expect("OMDB_APIKEY must be set");
-///
-/// let show = omdb::title("Silicon Valley")
-///     .apikey(apikey)
-/// 	.year(2014)
-/// 	.kind(Kind::Series)
-/// 	.get()
-/// 	.unwrap();
-///
-/// assert!(show.imdb_id == "tt2575988");
+/// # async fn test() {
+///     use omdb::Kind;
+///     let apikey = std::env::var("OMDB_APIKEY").expect("OMDB_APIKEY must be set");
+///    
+///     let show = omdb::title("Silicon Valley")
+///         .apikey(apikey)
+///         .year(2014)
+///         .kind(Kind::Series)
+///         .get()
+///         .await
+///         .unwrap();
+///    
+///     assert!(show.imdb_id == "tt2575988");
+/// # }
 /// ```
 pub fn title<S: Into<String>>(title: S) -> FindQuery {
-    FindQuery { title: Some(title.into()), ..Default::default() }
+    FindQuery {
+        title: Some(title.into()),
+        ..Default::default()
+    }
 }
 
 /// Starts a new `SearchQuery`.
@@ -96,13 +108,18 @@ pub fn title<S: Into<String>>(title: S) -> FindQuery {
 /// Search for movies:
 ///
 /// ```
-/// let apikey = std::env::var("OMDB_APIKEY").expect("OMDB_APIKEY must be set");
-/// let movies = omdb::search("batman").apikey(apikey).get().unwrap();
-///
-/// assert!(movies.total_results > 0);
+/// # async fn test() {
+///     let apikey = std::env::var("OMDB_APIKEY").expect("OMDB_APIKEY must be set");
+///     let movies = omdb::search("batman").apikey(apikey).get().await.unwrap();
+///    
+///     assert!(movies.total_results > 0);
+/// # }
 /// ```
 pub fn search<S: Into<String>>(search: S) -> SearchQuery {
-    SearchQuery { search: search.into(), ..Default::default() }
+    SearchQuery {
+        search: search.into(),
+        ..Default::default()
+    }
 }
 
 /// Represents a query being bulit for OMDb.
@@ -160,8 +177,7 @@ impl FindQuery {
 
     /// Perform OMDb Api request and attempt to find the movie
     /// this `FindQuery` is describing.
-    pub fn get(&self) -> Result<Movie, Error> {
-
+    pub async fn get(&self) -> Result<Movie, Error> {
         let mut params: Vec<(&str, String)> = Vec::new();
 
         if let Some(i) = self.imdb_id.as_ref() {
@@ -189,12 +205,14 @@ impl FindQuery {
         }
 
         // Send our request
-        let response: FindResponse = get_request(params)?.json()?;
+        let response: FindResponse = get_request(params).await?.json().await?;
 
         // Check if the Api's Response string equals true
         if response.response.to_lowercase() != "true" {
             // Return with the Api's Error field or "undefined" if empty
-            return Err(Error::Api(response.error.unwrap_or("undefined".to_owned())));
+            return Err(Error::Api(
+                response.error.unwrap_or_else(|| "undefined".to_owned()),
+            ));
         }
 
         Ok(response.into())
@@ -227,12 +245,10 @@ impl Default for SearchQuery {
 }
 
 impl SearchQuery {
-
     pub fn apikey<S: ToString>(&mut self, apikey: S) -> &mut SearchQuery {
         self.apikey = Some(apikey.to_string());
         self
     }
-
 
     /// Specify the kind of media.
     pub fn kind(&mut self, kind: Kind) -> &mut SearchQuery {
@@ -255,8 +271,7 @@ impl SearchQuery {
 
     /// Perform OMDb Api request and attempt to find the movie
     /// this `FindQuery` is describing.
-    pub fn get(&self) -> Result<SearchResults, Error> {
-
+    pub async fn get(&self) -> Result<SearchResults, Error> {
         let mut params: Vec<(&str, String)> = Vec::new();
 
         params.push(("s", self.search.clone()));
@@ -279,12 +294,14 @@ impl SearchQuery {
         }
 
         // Send our request
-        let response: SearchResponse = get_request(params)?.json()?;
+        let response: SearchResponse = get_request(params).await?.json().await?;
 
         // Check if the Api's Response string equals true
         if response.response.to_lowercase() != "true" {
             // Return with the Api's Error field or "undefined" if empty
-            return Err(Error::Api(response.error.unwrap_or("undefined".to_owned())));
+            return Err(Error::Api(
+                response.error.unwrap_or_else(|| "undefined".to_owned()),
+            ));
         }
 
         Ok(response.into())

@@ -16,6 +16,9 @@ pub enum Error {
 }
 
 impl StdError for Error {
+
+    // TODO: Deprecated.
+    #[allow(deprecated)]
     fn description(&self) -> &str {
         match *self {
             Error::Http(ref err) => err.description(),
@@ -25,7 +28,7 @@ impl StdError for Error {
         }
     }
 
-    fn cause(&self) -> Option<&StdError> {
+    fn cause(&self) -> Option<&dyn StdError> {
         match *self {
             Error::Http(ref err) => Some(err),
             _ => None,
@@ -43,7 +46,7 @@ impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             Error::Http(ref err) => err.fmt(f),
-            _ => f.write_str(self.description()),
+            _ => f.write_str(&self.to_string()),
         }
     }
 }
