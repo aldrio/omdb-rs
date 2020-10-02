@@ -1,5 +1,5 @@
 //! OMDb API for Rust
-//! 
+//!
 //! [Github Repo](https://github.com/aldrio/omdb-rs)
 extern crate serde;
 #[macro_use]
@@ -11,8 +11,8 @@ pub use error::Error;
 
 pub mod query;
 pub use query::imdb_id;
-pub use query::title;
 pub use query::search;
+pub use query::title;
 
 /// A movie, series, episode, or game from OMDb.
 #[derive(Debug, Serialize, Deserialize)]
@@ -70,7 +70,7 @@ pub enum Kind {
 
 impl Kind {
     fn from_str(from: &str) -> Option<Kind> {
-        match from.as_ref() {
+        match from {
             "movie" => Some(Kind::Movie),
             "series" => Some(Kind::Series),
             "episode" => Some(Kind::Episode),
@@ -109,40 +109,40 @@ impl From<Plot> for &'static str {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use std::env;
-    use Kind;
 
-    #[test]
-    fn imdb_id() {
+    #[tokio::test]
+    async fn imdb_id() {
         let apikey = env::var("OMDB_APIKEY").expect("OMDB_APIKEY must be set");
         let movie = super::imdb_id("tt0032138")
             .apikey(apikey)
             .year(1939)
             .get()
+            .await
             .unwrap();
 
         assert!(movie.title == "The Wizard of Oz");
     }
 
-    #[test]
-    fn title() {
+    #[tokio::test]
+    async fn title() {
         let apikey = env::var("OMDB_APIKEY").expect("OMDB_APIKEY must be set");
         let show = super::title("silicon valley")
             .apikey(apikey)
             .year(2014)
             .kind(Kind::Series)
             .get()
+            .await
             .unwrap();
 
         assert!(show.imdb_id == "tt2575988");
     }
 
-    #[test]
-    fn search() {
+    #[tokio::test]
+    async fn search() {
         let apikey = env::var("OMDB_APIKEY").expect("OMDB_APIKEY must be set");
-        let search = super::search("Batman")
-            .apikey(apikey)
-            .get().unwrap();
+        let search = super::search("Batman").apikey(apikey).get().await.unwrap();
 
         assert!(search.total_results > 0);
     }

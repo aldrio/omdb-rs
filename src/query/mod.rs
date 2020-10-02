@@ -1,12 +1,10 @@
-use reqwest;
-
 use serde::Serialize;
 use std::borrow::Borrow;
 
 mod model;
 use self::model::{FindResponse, SearchResponse};
 
-use crate::{Kind, Error, Movie, SearchResults, Plot};
+use crate::{Error, Kind, Movie, Plot, SearchResults};
 
 /// A function to create and send a request to OMDb.
 async fn get_request<I, K, V>(params: I) -> Result<reqwest::Response, Error>
@@ -16,8 +14,8 @@ where
     K: AsRef<str> + Serialize,
     V: AsRef<str> + Serialize,
 {
-    const API_ENDPOINT: &'static str = "https://omdbapi.com";
-    const API_VERSION: &'static str = "1";
+    const API_ENDPOINT: &str = "https://omdbapi.com";
+    const API_VERSION: &str = "1";
 
     let params = params.into_iter().collect::<Vec<_>>();
 
@@ -48,14 +46,17 @@ where
 /// Find a movie using it's IMDb id:
 ///
 /// ```
-/// let apikey = std::env::var("OMDB_APIKEY").expect("OMDB_APIKEY must be set");
-/// let movie = omdb::imdb_id("tt0032138")
-///     .apikey(apikey)
-///     .year(1939)
-///     .get()
-///     .unwrap();
-///
-/// assert!(movie.title == "The Wizard of Oz");
+/// # async fn test() {
+///     let apikey = std::env::var("OMDB_APIKEY").expect("OMDB_APIKEY must be set");
+///     let movie = omdb::imdb_id("tt0032138")
+///         .apikey(apikey)
+///         .year(1939)
+///         .get()
+///         .await
+///         .unwrap();
+///    
+///     assert!(movie.title == "The Wizard of Oz");
+/// # }
 /// ```
 pub fn imdb_id<S: Into<String>>(title: S) -> FindQuery {
     FindQuery {
@@ -74,17 +75,20 @@ pub fn imdb_id<S: Into<String>>(title: S) -> FindQuery {
 /// Find a series using it's title:
 ///
 /// ```
-/// use omdb::Kind;
-/// let apikey = std::env::var("OMDB_APIKEY").expect("OMDB_APIKEY must be set");
-///
-/// let show = omdb::title("Silicon Valley")
-///     .apikey(apikey)
-///     .year(2014)
-///     .kind(Kind::Series)
-///     .get()
-///     .unwrap();
-///
-/// assert!(show.imdb_id == "tt2575988");
+/// # async fn test() {
+///     use omdb::Kind;
+///     let apikey = std::env::var("OMDB_APIKEY").expect("OMDB_APIKEY must be set");
+///    
+///     let show = omdb::title("Silicon Valley")
+///         .apikey(apikey)
+///         .year(2014)
+///         .kind(Kind::Series)
+///         .get()
+///         .await
+///         .unwrap();
+///    
+///     assert!(show.imdb_id == "tt2575988");
+/// # }
 /// ```
 pub fn title<S: Into<String>>(title: S) -> FindQuery {
     FindQuery {
@@ -104,10 +108,12 @@ pub fn title<S: Into<String>>(title: S) -> FindQuery {
 /// Search for movies:
 ///
 /// ```
-/// let apikey = std::env::var("OMDB_APIKEY").expect("OMDB_APIKEY must be set");
-/// let movies = omdb::search("batman").apikey(apikey).get().unwrap();
-///
-/// assert!(movies.total_results > 0);
+/// # async fn test() {
+///     let apikey = std::env::var("OMDB_APIKEY").expect("OMDB_APIKEY must be set");
+///     let movies = omdb::search("batman").apikey(apikey).get().await.unwrap();
+///    
+///     assert!(movies.total_results > 0);
+/// # }
 /// ```
 pub fn search<S: Into<String>>(search: S) -> SearchQuery {
     SearchQuery {
@@ -204,7 +210,9 @@ impl FindQuery {
         // Check if the Api's Response string equals true
         if response.response.to_lowercase() != "true" {
             // Return with the Api's Error field or "undefined" if empty
-            return Err(Error::Api(response.error.unwrap_or("undefined".to_owned())));
+            return Err(Error::Api(
+                response.error.unwrap_or_else(|| "undefined".to_owned()),
+            ));
         }
 
         Ok(response.into())
@@ -291,7 +299,9 @@ impl SearchQuery {
         // Check if the Api's Response string equals true
         if response.response.to_lowercase() != "true" {
             // Return with the Api's Error field or "undefined" if empty
-            return Err(Error::Api(response.error.unwrap_or("undefined".to_owned())));
+            return Err(Error::Api(
+                response.error.unwrap_or_else(|| "undefined".to_owned()),
+            ));
         }
 
         Ok(response.into())

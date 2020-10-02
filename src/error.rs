@@ -18,6 +18,7 @@ pub enum Error {
 impl StdError for Error {
 
     // TODO: Deprecated.
+    #[allow(deprecated)]
     fn description(&self) -> &str {
         match *self {
             Error::Http(ref err) => err.description(),
