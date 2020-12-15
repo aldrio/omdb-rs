@@ -3,6 +3,7 @@ use std::borrow::Borrow;
 
 mod model;
 use self::model::{FindResponse, SearchResponse};
+pub use model::Episode;
 
 use crate::{Error, Kind, Movie, Plot, SearchResults};
 
