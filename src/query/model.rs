@@ -87,6 +87,12 @@ pub struct FindResponse {
     pub imdb_id: Option<String>,
     #[serde(rename = "Type")]
     pub kind: Option<String>,
+    #[serde(rename = "Season", default, deserialize_with = "de_option_u16")]
+    pub season: Option<u16>,
+    #[serde(rename = "totalSeasons", default, deserialize_with = "de_option_u16")]
+    pub total_seasons: Option<u16>,
+    #[serde(rename = "Episodes", default)]
+    pub episodes: Option<Vec<Episode>>,
 }
 
 impl From<FindResponse> for Movie {
@@ -117,6 +123,9 @@ impl From<FindResponse> for Movie {
                 },
                 None => Kind::Movie,
             },
+            season: find.season.unwrap_or_default(),
+            total_seasons: find.total_seasons.unwrap_or_default(),
+            episodes: find.episodes.unwrap_or_default(),
         }
     }
 }
