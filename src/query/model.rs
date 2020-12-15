@@ -1,5 +1,31 @@
 use crate::{Kind, Movie, SearchResults, SearchResultsMovie};
-use serde::Deserialize;
+use serde::{de, Deserialize, Deserializer, Serialize};
+use serde_json::Value;
+
+fn de_u16<'de, D: Deserializer<'de>>(deserializer: D) -> Result<u16, D::Error> {
+    match Value::deserialize(deserializer)? {
+        Value::String(s) => Ok(s.parse().map_err(de::Error::custom)?),
+        Value::Number(n) => Ok(n.as_u64().ok_or(de::Error::custom("Invalid number"))? as u16),
+        _ => Err(de::Error::custom("Wrong type"))
+    }
+}
+
+fn de_option_u16<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Option<u16>, D::Error> {
+    match Value::deserialize(deserializer)? {
+        Value::Null => Ok(None),
+        Value::String(s) => Ok(Some(s.parse().map_err(de::Error::custom)?)),
+        Value::Number(n) => Ok(Some(n.as_u64().ok_or(de::Error::custom("Invalid number"))? as u16)),
+        _ => Err(de::Error::custom("Wrong type"))
+    }
+}
+
+fn de_f32<'de, D: Deserializer<'de>>(deserializer: D) -> Result<f32, D::Error> {
+    match Value::deserialize(deserializer)? {
+        Value::String(s) => Ok(s.parse().map_err(de::Error::custom)?),
+        Value::Number(n) => Ok(n.as_f64().ok_or(de::Error::custom("Invalid number"))? as f32),
+        _ => Err(de::Error::custom("Wrong type"))
+    }
+}
 
 #[derive(Debug, Deserialize)]
 pub struct FindResponse {
