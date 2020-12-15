@@ -19,10 +19,10 @@ fn de_option_u16<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Option<u1
     }
 }
 
-fn de_f32<'de, D: Deserializer<'de>>(deserializer: D) -> Result<f32, D::Error> {
+fn de_option_f32<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Option<f32>, D::Error> {
     match Value::deserialize(deserializer)? {
-        Value::String(s) => Ok(s.parse().map_err(de::Error::custom)?),
-        Value::Number(n) => Ok(n.as_f64().ok_or(de::Error::custom("Invalid number"))? as f32),
+        Value::String(s) => Ok(s.parse::<f32>().map(|v| Some(v)).unwrap_or(None)),
+        Value::Number(n) => Ok(Some(n.as_f64().ok_or(de::Error::custom("Invalid number"))? as f32)),
         _ => Err(de::Error::custom("Wrong type"))
     }
 }
@@ -35,8 +35,8 @@ pub struct Episode {
     pub released: String, // TODO:  chrono::DateTime?  Some other structure date type?
     #[serde(rename = "Episode", deserialize_with = "de_u16")]
     pub episode: u16,
-    #[serde(rename = "imdbRating", deserialize_with = "de_f32")]
-    pub imdb_rating: f32,
+    #[serde(rename = "imdbRating", deserialize_with = "de_option_f32")]
+    pub imdb_rating: Option<f32>,
     #[serde(rename = "imdbID")]
     pub imdb_id: String,
 }
