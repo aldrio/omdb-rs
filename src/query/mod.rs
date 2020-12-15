@@ -135,7 +135,8 @@ pub struct FindQuery {
     // Optional
     kind: Option<Kind>,
     year: Option<String>,
-    plot: Option<Plot>, // TODO: Season and Episode
+    plot: Option<Plot>, // TODO: Episode
+    season: Option<u16>,
 }
 
 impl Default for FindQuery {
@@ -147,6 +148,7 @@ impl Default for FindQuery {
             kind: None,
             year: None,
             plot: None,
+            season: None,
         }
     }
 }
@@ -172,6 +174,12 @@ impl FindQuery {
     /// Specify the plot length.
     pub fn plot(&mut self, plot: Plot) -> &mut FindQuery {
         self.plot = Some(plot);
+        self
+    }
+
+    /// For series, specify the season to grab a list of episodes
+    pub fn season(&mut self, season: u16) -> &mut FindQuery {
+        self.season = Some(season);
         self
     }
 
@@ -202,6 +210,10 @@ impl FindQuery {
         if let Some(plot) = self.plot.as_ref() {
             let p: &str = (*plot).into();
             params.push(("plot", String::from(p)));
+        }
+
+        if let Some(season) = self.season.as_ref() {
+            params.push(("season", season.to_string()));
         }
 
         // Send our request
