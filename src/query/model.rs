@@ -27,6 +27,20 @@ fn de_f32<'de, D: Deserializer<'de>>(deserializer: D) -> Result<f32, D::Error> {
     }
 }
 
+#[derive(Debug, Deserialize, Serialize)]
+pub struct Episode {
+    #[serde(rename = "Title")]
+    pub title: String,
+    #[serde(rename = "Released")]
+    pub released: String, // TODO:  chrono::DateTime?  Some other structure date type?
+    #[serde(rename = "Episode", deserialize_with = "de_u16")]
+    pub episode: u16,
+    #[serde(rename = "imdbRating", deserialize_with = "de_f32")]
+    pub imdb_rating: f32,
+    #[serde(rename = "imdbID")]
+    pub imdb_id: String,
+}
+
 #[derive(Debug, Deserialize)]
 pub struct FindResponse {
     #[serde(rename = "Response")]
