@@ -19,6 +19,9 @@ features = ["rustls-tls", "json"]
 features = ["derive"]
 version = "~1.0"
 
+[dependencies.serde_json]
+version = "~1.0"
+
 [dev-dependencies.tokio]
 features = ["macros"]
 version = "~1.0"

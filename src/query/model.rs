@@ -1,5 +1,45 @@
 use crate::{Kind, Movie, SearchResults, SearchResultsMovie};
-use serde::Deserialize;
+use serde::{de, Deserialize, Deserializer, Serialize};
+use serde_json::Value;
+
+fn de_u16<'de, D: Deserializer<'de>>(deserializer: D) -> Result<u16, D::Error> {
+    match Value::deserialize(deserializer)? {
+        Value::String(s) => Ok(s.parse().map_err(de::Error::custom)?),
+        Value::Number(n) => Ok(n.as_u64().ok_or(de::Error::custom("Invalid number"))? as u16),
+        _ => Err(de::Error::custom("Wrong type"))
+    }
+}
+
+fn de_option_u16<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Option<u16>, D::Error> {
+    match Value::deserialize(deserializer)? {
+        Value::Null => Ok(None),
+        Value::String(s) => Ok(Some(s.parse().map_err(de::Error::custom)?)),
+        Value::Number(n) => Ok(Some(n.as_u64().ok_or(de::Error::custom("Invalid number"))? as u16)),
+        _ => Err(de::Error::custom("Wrong type"))
+    }
+}
+
+fn de_option_f32<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Option<f32>, D::Error> {
+    match Value::deserialize(deserializer)? {
+        Value::String(s) => Ok(s.parse::<f32>().map(|v| Some(v)).unwrap_or(None)),
+        Value::Number(n) => Ok(Some(n.as_f64().ok_or(de::Error::custom("Invalid number"))? as f32)),
+        _ => Err(de::Error::custom("Wrong type"))
+    }
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct Episode {
+    #[serde(rename = "Title")]
+    pub title: String,
+    #[serde(rename = "Released")]
+    pub released: String, // TODO:  chrono::DateTime?  Some other structure date type?
+    #[serde(rename = "Episode", deserialize_with = "de_u16")]
+    pub episode: u16,
+    #[serde(rename = "imdbRating", deserialize_with = "de_option_f32")]
+    pub imdb_rating: Option<f32>,
+    #[serde(rename = "imdbID")]
+    pub imdb_id: String,
+}
 
 #[derive(Debug, Deserialize)]
 pub struct FindResponse {
@@ -47,6 +87,12 @@ pub struct FindResponse {
     pub imdb_id: Option<String>,
     #[serde(rename = "Type")]
     pub kind: Option<String>,
+    #[serde(rename = "Season", default, deserialize_with = "de_option_u16")]
+    pub season: Option<u16>,
+    #[serde(rename = "totalSeasons", default, deserialize_with = "de_option_u16")]
+    pub total_seasons: Option<u16>,
+    #[serde(rename = "Episodes", default)]
+    pub episodes: Option<Vec<Episode>>,
 }
 
 impl From<FindResponse> for Movie {
@@ -77,6 +123,9 @@ impl From<FindResponse> for Movie {
                 },
                 None => Kind::Movie,
             },
+            season: find.season.unwrap_or_default(),
+            total_seasons: find.total_seasons.unwrap_or_default(),
+            episodes: find.episodes.unwrap_or_default(),
         }
     }
 }

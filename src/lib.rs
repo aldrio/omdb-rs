@@ -7,6 +7,7 @@ mod error;
 pub use error::Error;
 
 pub mod query;
+pub use query::Episode;
 pub use query::imdb_id;
 pub use query::search;
 pub use query::title;
@@ -33,6 +34,9 @@ pub struct Movie {
     pub imdb_votes: String,
     pub imdb_id: String,
     pub kind: Kind,
+    pub season: u16,
+    pub total_seasons: u16,
+    pub episodes: Vec<Episode>,
 }
 
 /// Search results from OMDb.
